@@ -22,10 +22,9 @@ services:
       - ./backend/.env
     environment:
       DEBUG: "False"
-      ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      PORT: "8000"
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
-      CORS_ALLOWED_ORIGINS: "http://localhost,http://127.0.0.1"
     depends_on:
       db:
         condition: service_healthy
@@ -42,6 +41,9 @@ services:
       dockerfile: Dockerfile
     image: inuka-digital-leap:latest
     container_name: inuka-digital-leap
+    environment:
+      BACKEND_HOSTPORT: backend:8000
+      PORT: "80"
     ports:
       - "80:80"
     restart: unless-stopped

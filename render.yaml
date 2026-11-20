@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: inuka-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    branch: main
+    autoDeployTrigger: checksPass
+    healthCheckPath: /api/health/
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: PORT
+        value: "10000"
+      - key: ALLOWED_HOSTS
+        value: "inuka-backend.onrender.com,inuka-digital-leap.onrender.com,inukadigitalleap.jhubafrica.com,localhost,127.0.0.1"
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@example.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        generateValue: true
+
+  - type: web
+    name: inuka-digital-leap
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    branch: main
+    autoDeployTrigger: checksPass
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: BACKEND_HOSTPORT
+        fromService:
+          name: inuka-backend
+          type: web
+          property: hostport
+
+# The Blueprint reuses the existing inuka-backend DATABASE_URL and does not
+# create a replacement database, so the current production data is preserved.

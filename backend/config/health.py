@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.db import connection
+from django.db.utils import OperationalError
 
 
 @api_view(['GET'])
@@ -9,13 +10,17 @@ from django.db import connection
 def health_check(request):
     try:
         connection.ensure_connection()
-        db_status = "connected"
-    except Exception:
-        db_status = "disconnected"
+    except OperationalError:
+        return Response({
+            "status": "unavailable",
+            "database": "disconnected",
+            "version": "1.0.0",
+            "project": "Inuka Digital Leap API"
+        }, status=503)
 
     return Response({
         "status": "ok",
-        "database": db_status,
+        "database": "connected",
         "version": "1.0.0",
         "project": "Inuka Digital Leap API"
     })

@@ -2,32 +2,21 @@
 FROM node:20-alpine AS build
 
 WORKDIR /app
-
-# Copy package files first (better caching)
 COPY package*.json ./
-
 RUN npm ci
-
-# Copy rest of the app
 COPY . .
-
-# use local Angular via npx
 RUN npx ng build --configuration production
 
-
-# Stage 2: Serve with Nginx
+# Stage 2: Serve the SPA and proxy API requests to the configured backend.
 FROM nginx:stable-alpine
-
-# Remove default nginx website
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copy Angular build output to nginx
+RUN apk add --no-cache gettext
 COPY --from=build /app/dist/idl-app/browser/ /usr/share/nginx/html/
-# Expose port 80
+COPY nginx.conf.template /etc/nginx/conf.d/default.conf.template
+COPY nginx-entrypoint.sh /usr/local/bin/inuka-nginx-entrypoint
+RUN chmod +x /usr/local/bin/inuka-nginx-entrypoint
+
+ENV BACKEND_HOSTPORT=backend:8000
+ENV PORT=80
 EXPOSE 80
-
-# Start nginx
+ENTRYPOINT ["/usr/local/bin/inuka-nginx-entrypoint"]
 CMD ["nginx", "-g", "daemon off;"]
-
-
-COPY nginx.conf /etc/nginx/conf.d/default.conf
