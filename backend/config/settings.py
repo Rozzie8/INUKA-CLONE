@@ -75,9 +75,15 @@ import dj_database_url
 DATABASE_URL = config('DATABASE_URL', default=None)
 
 if DATABASE_URL:
-    # Production (Railway supplies this automatically)
+    # Production databases usually use SSL. Keep DATABASE_URL-compatible
+    # options such as sslmode=require when present.
+    database_config = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    database_host = database_config.get('HOST', '')
+    if database_host not in ('', 'localhost', '127.0.0.1', 'db'):
+        database_config.setdefault('OPTIONS', {})
+        database_config['OPTIONS'].setdefault('sslmode', 'require')
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+        'default': database_config
     }
 else:
     # Local development (Docker Compose .env values)

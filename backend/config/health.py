@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.db import connection
-from django.db.utils import OperationalError
+from django.db.utils import DatabaseError
 
 
 @api_view(['GET'])
@@ -10,7 +10,7 @@ from django.db.utils import OperationalError
 def health_check(request):
     try:
         connection.ensure_connection()
-    except OperationalError:
+    except DatabaseError:
         return Response({
             "status": "unavailable",
             "database": "disconnected",
